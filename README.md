@@ -17,10 +17,6 @@ Clients send a job request and then monitor the return queue for the response. T
   "request": "<original request object>",
   "response": "<array of base64 images>"
 }
-```
-
-arduino
-Copy code
 
 ### Server-side
 
