@@ -35,3 +35,7 @@ The response from the server looks like:
 ```
 
 The system supports any number of clients and servers.
+
+### AI assisted
+
+The development of this software is assisted by Github Copilot and ChatGPT
