@@ -13,22 +13,25 @@ def connect_to_redis(config):
     )
     return redis_connection
 
-def read_from_ingress_queue(redis_connection, base_queue):
+def read_from_ingress_queue(redis_connection, base_queue_name):
     """
-    Read a job from the priority ingress queues using the Redis connection object.
+    Read a job from the ingress queues using the Redis connection object.
     Return the job request and the client-specific return queue.
     """
-    # Prioritize higher priority queues by iterating in decreasing order of priority
-    for i in range(5, -1, -1):
-        current_queue = f"{base_queue}_priority_{i}"
-        job = redis_connection.blpop(current_queue, timeout=0)
-        if job is not None:
-            job = json.loads(job[1])
-            request = job.get("request")
-            return_queue = job.get("return_queue")
-            return request, return_queue
-
-    return None, None
+    ingress_queues = [
+        f"{base_queue_name}_priority_{i}" for i in range(5, -1, -1)
+    ]
+    while True:
+        print()
+        for queue_name in ingress_queues:
+            print(f"Checking queue {queue_name}...")
+            job = redis_connection.blpop(queue_name, timeout=1)
+            if job is not None:
+                # Parse the job as a JSON object
+                job = json.loads(job[1])
+                request = job.get("request")
+                return_queue = job.get("return_queue")
+                return request, return_queue
 
 import json
 
