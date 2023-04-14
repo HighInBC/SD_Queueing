@@ -12,15 +12,26 @@ The system is designed to manage a Redis queue that ingresses from clients needi
 
 Clients send a job request and then monitor the return queue for the response. The response will be in the form of a JSON object with the following structure:
 
+A client request looks like:
+
 ```json
 {
-  "request": "<original request object>",
-  "response": "<array of base64 images>"
+  "request": "<stable diffusion api request>",
+  "return_queue": "<client specific return queue>"
 }
 ```
 
 ### Server-side
 
 The server is responsible for monitoring the ingress queue, performing the Stable Diffusion API call, packaging the response, and sending it to the return queue.
+
+The response from the server looks like:
+
+```json
+{
+  "request": "<original request object>",
+  "response": "<array of base64 images>"
+}
+```
 
 The system supports any number of clients and servers.
