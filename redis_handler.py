@@ -1,5 +1,6 @@
 import redis
 import json
+import time
 
 def connect_to_redis(config):
     """
@@ -24,14 +25,13 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
     while True:
         print()
         for queue_name in ingress_queues:
-            print(f"Checking queue {queue_name}...")
-            job = redis_connection.blpop(queue_name, timeout=1)
+            job = redis_connection.blpop(queue_name, timeout=0.01)
             if job is not None:
-                # Parse the job as a JSON object
                 job = json.loads(job[1])
                 request = job.get("request")
                 return_queue = job.get("return_queue")
                 return request, return_queue
+        time.sleep(.25)
 
 import json
 

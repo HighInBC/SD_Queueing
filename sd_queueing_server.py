@@ -24,6 +24,7 @@ def main():
             send_response_to_return_queue(redis_connection, return_queue, request, base64_images)
         else:
             print("Waiting for job...")
+            time.sleep(1)
 
 if __name__ == "__main__":
     main()
