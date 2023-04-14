@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import time
 from redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
 from sd_handler import process_stable_diffusion_request
 
