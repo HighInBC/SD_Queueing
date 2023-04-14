@@ -1,44 +1,34 @@
-import redis
+#!/usr/bin/env python3
 
-def connect_to_redis():
-    """
-    Connect to the Redis server and return the connection object.
-    """
-    pass
+import json
+from redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
+from sd_handler import process_stable_diffusion_request
 
-def read_from_ingress_queue(redis_connection):
+def load_config():
     """
-    Read a job from the ingress queue using the Redis connection object.
-    Return the job request and the client-specific return queue.
+    Load configuration from "config.json" and return the configuration dictionary.
     """
-    pass
-
-def process_stable_diffusion_request(request):
-    """
-    Process the Stable Diffusion API request and return an array of base64 images.
-    """
-    pass
-
-def send_response_to_return_queue(redis_connection, return_queue, original_request, response):
-    """
-    Package the original request and response (array of base64 images) in a JSON object.
-    Send the JSON object to the client-specific return queue using the Redis connection object.
-    """
-    pass
+    with open("config.json", "r") as config_file:
+        config = json.load(config_file)
+    return config
 
 def main():
+    # Load configuration
+    config = load_config()
+
     # Connect to Redis
-    redis_connection = connect_to_redis()
+    redis_connection = connect_to_redis(config)
 
     while True:
         # Read from the ingress queue
-        request, return_queue = read_from_ingress_queue(redis_connection)
+        request, return_queue = read_from_ingress_queue(redis_connection, config["ingress_queue"])
 
         # Process the Stable Diffusion request
         base64_images = process_stable_diffusion_request(request)
 
         # Send the response to the return queue
         send_response_to_return_queue(redis_connection, return_queue, request, base64_images)
+        break
 
 if __name__ == "__main__":
     main()
