@@ -12,10 +12,12 @@ The system is designed to manage a Redis queue that ingresses from clients needi
 
 Clients send a job request and then monitor the return queue for the response. The response will be in the form of a JSON object with the following structure:
 
+```json
 {
-'request': <original request object>,
-'response': <array of base64 images>
+  "request": "<original request object>",
+  "response": "<array of base64 images>"
 }
+```
 
 arduino
 Copy code
