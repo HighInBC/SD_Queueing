@@ -19,6 +19,8 @@ def main():
     while True:
         print("Reading from ingress queue...")
         request, return_queue = read_from_ingress_queue(redis_connection, config["ingress_queue"])
+        print("request: ", request)
+        print("return_queue: ", return_queue)
         if request is not None:
             base64_images = process_stable_diffusion_request(request)
             send_response_to_return_queue(redis_connection, return_queue, request, base64_images)

@@ -1,6 +1,7 @@
 # Safety
 
 config.json
+request.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

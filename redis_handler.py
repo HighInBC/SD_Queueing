@@ -23,7 +23,6 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
         f"{base_queue_name}_priority_{i}" for i in range(5, -1, -1)
     ]
     while True:
-        print()
         for queue_name in ingress_queues:
             job = redis_connection.blpop(queue_name, timeout=0.01)
             if job is not None:
@@ -32,8 +31,6 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
                 return_queue = job.get("return_queue")
                 return request, return_queue
         time.sleep(.25)
-
-import json
 
 def send_response_to_return_queue(redis_connection, return_queue, original_request, response):
     """
@@ -46,3 +43,29 @@ def send_response_to_return_queue(redis_connection, return_queue, original_reque
     }
     response_str = json.dumps(response_obj)
     redis_connection.rpush(return_queue, response_str)
+
+def send_job_to_ingress_queue(redis_connection, base_queue_name, job, priority=0):
+    """
+    Send a job to the ingress queue using the Redis connection object.
+    The priority should be an integer between 0 and 5, where 0 is the lowest priority and 5 is the highest.
+    """
+    if priority < 0:
+        priority = 0
+    if priority > 5:
+        priority = 5
+    queue_name = f"{base_queue_name}_priority_{priority}"
+    job_str = json.dumps(job)
+    redis_connection.rpush(queue_name, job_str)
+
+def read_from_return_queue(redis_connection, return_queue, timeout=None):
+    """
+    Read a response from the client-specific return queue using the Redis connection object.
+    Blocks until the response is available or the optional timeout is reached.
+    Returns a dictionary containing the original request and the response (array of base64 images).
+    """
+    response = redis_connection.blpop(return_queue, timeout=timeout)
+    if response is not None:
+        response_obj = json.loads(response[1])
+        return response_obj
+    else:
+        return None
