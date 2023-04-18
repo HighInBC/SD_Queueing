@@ -27,9 +27,7 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
             job = redis_connection.blpop(queue_name, timeout=0.01)
             if job is not None:
                 job = json.loads(job[1])
-                request = job.get("request")
-                return_queue = job.get("return_queue")
-                return request, return_queue
+                return job
         time.sleep(.25)
 
 def send_response_to_return_queue(redis_connection, return_queue, original_request, response):
@@ -44,7 +42,7 @@ def send_response_to_return_queue(redis_connection, return_queue, original_reque
     response_str = json.dumps(response_obj)
     redis_connection.rpush(return_queue, response_str)
 
-def send_job_to_ingress_queue(redis_connection, base_queue_name, job, priority=0):
+def send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, label, priority=0):
     """
     Send a job to the ingress queue using the Redis connection object.
     The priority should be an integer between 0 and 5, where 0 is the lowest priority and 5 is the highest.
@@ -54,6 +52,7 @@ def send_job_to_ingress_queue(redis_connection, base_queue_name, job, priority=0
     if priority > 5:
         priority = 5
     queue_name = f"{base_queue_name}_priority_{priority}"
+    job = {"payload":payload, "return_queue":return_queue, "label":label}
     job_str = json.dumps(job)
     redis_connection.rpush(queue_name, job_str)
 

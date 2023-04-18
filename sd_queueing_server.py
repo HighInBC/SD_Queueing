@@ -18,12 +18,13 @@ def main():
 
     while True:
         print("Reading from ingress queue...")
-        request, return_queue = read_from_ingress_queue(redis_connection, config["ingress_queue"])
-        print("request: ", request)
-        print("return_queue: ", return_queue)
-        if request is not None:
-            base64_images = process_stable_diffusion_request(request)
-            send_response_to_return_queue(redis_connection, return_queue, request, base64_images)
+        response = read_from_ingress_queue(redis_connection, config["ingress_queue"])
+        payload = response["payload"]
+        return_queue = response["return_queue"]
+        print(json.dumps(response, indent=4))
+        if payload is not None:
+            base64_images = process_stable_diffusion_request(payload)
+            send_response_to_return_queue(redis_connection, return_queue, response, base64_images)
         else:
             print("Waiting for job...")
             time.sleep(1)
