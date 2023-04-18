@@ -2,10 +2,18 @@ import redis
 import json
 import time
 
+class InvalidInputException(Exception):
+    pass
+
 def connect_to_redis(config):
-    """
-    Connect to the Redis server using the configuration and return the connection object.
-    """
+    if not isinstance(config, dict):
+        raise InvalidInputException("Config must be a dictionary.")
+
+    required_keys = ["redis_host", "redis_port"]
+    for key in required_keys:
+        if key not in config:
+            raise InvalidInputException(f"Config is missing required key: {key}")
+
     redis_connection = redis.StrictRedis(
         host=config["redis_host"],
         port=config["redis_port"],
@@ -15,10 +23,11 @@ def connect_to_redis(config):
     return redis_connection
 
 def read_from_ingress_queue(redis_connection, base_queue_name):
-    """
-    Read a job from the ingress queues using the Redis connection object.
-    Return the job request and the client-specific return queue.
-    """
+    if not isinstance(redis_connection, redis.StrictRedis):
+        raise InvalidInputException("Invalid Redis connection object.")
+    if not isinstance(base_queue_name, str):
+        raise InvalidInputException("Base queue name must be a string.")
+
     ingress_queues = [
         f"{base_queue_name}_priority_{i}" for i in range(5, -1, -1)
     ]
@@ -31,10 +40,11 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
         time.sleep(.25)
 
 def send_response_to_return_queue(redis_connection, return_queue, original_request, response):
-    """
-    Package the original request and response (array of base64 images) in a JSON object.
-    Send the JSON object to the client-specific return queue using the Redis connection object.
-    """
+    if not isinstance(redis_connection, redis.StrictRedis):
+        raise InvalidInputException("Invalid Redis connection object.")
+    if not isinstance(return_queue, str):
+        raise InvalidInputException("Return queue must be a string.")
+
     response_obj = {
         "request": original_request,
         "response": response
@@ -43,25 +53,28 @@ def send_response_to_return_queue(redis_connection, return_queue, original_reque
     redis_connection.rpush(return_queue, response_str)
 
 def send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, label, priority=0):
-    """
-    Send a job to the ingress queue using the Redis connection object.
-    The priority should be an integer between 0 and 5, where 0 is the lowest priority and 5 is the highest.
-    """
-    if priority < 0:
-        priority = 0
-    if priority > 5:
-        priority = 5
+    if not isinstance(redis_connection, redis.StrictRedis):
+        raise InvalidInputException("Invalid Redis connection object.")
+    if not isinstance(base_queue_name, str):
+        raise InvalidInputException("Base queue name must be a string.")
+    if not isinstance(return_queue, str):
+        raise InvalidInputException("Return queue must be a string.")
+    if not isinstance(label, str):
+        raise InvalidInputException("Label must be a string.")
+    if not isinstance(priority, int) or priority < 0 or priority > 5:
+        raise InvalidInputException("Priority must be an integer between 0 and 5.")
+
     queue_name = f"{base_queue_name}_priority_{priority}"
-    job = {"payload":payload, "return_queue":return_queue, "label":label}
+    job = {"payload": payload, "return_queue": return_queue, "label": label}
     job_str = json.dumps(job)
     redis_connection.rpush(queue_name, job_str)
 
 def read_from_return_queue(redis_connection, return_queue, timeout=None):
-    """
-    Read a response from the client-specific return queue using the Redis connection object.
-    Blocks until the response is available or the optional timeout is reached.
-    Returns a dictionary containing the original request and the response (array of base64 images).
-    """
+    if not isinstance(redis_connection, redis.StrictRedis):
+        raise InvalidInputException("Invalid Redis connection object.")
+    if not isinstance(return_queue, str):
+        raise InvalidInputException("Return queue must be a string.")
+
     response = redis_connection.blpop(return_queue, timeout=timeout)
     if response is not None:
         response_obj = json.loads(response[1])
