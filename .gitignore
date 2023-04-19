@@ -2,6 +2,7 @@
 
 config.json
 request.json
+bulk_images/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

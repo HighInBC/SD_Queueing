@@ -44,7 +44,7 @@ def main():
         print(json.dumps(response, indent=4))
         if payload is not None:
             base64_images = process_stable_diffusion_request(payload)
-            send_response_to_return_queue(redis_connection, return_queue, response, base64_images)
+            send_response_to_return_queue(redis_connection, return_queue, response, base64_images, config["server_id"])
         else:
             print("Waiting for job...")
             time.sleep(1)

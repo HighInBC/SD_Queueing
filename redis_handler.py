@@ -39,7 +39,7 @@ def read_from_ingress_queue(redis_connection, base_queue_name):
                 return job
         time.sleep(.25)
 
-def send_response_to_return_queue(redis_connection, return_queue, original_request, response):
+def send_response_to_return_queue(redis_connection, return_queue, original_request, response, server_id):
     if not isinstance(redis_connection, redis.StrictRedis):
         raise InvalidInputException("Invalid Redis connection object.")
     if not isinstance(return_queue, str):
@@ -47,6 +47,7 @@ def send_response_to_return_queue(redis_connection, return_queue, original_reque
 
     response_obj = {
         "request": original_request,
+        "server_id": server_id,
         "response": response
     }
     response_str = json.dumps(response_obj)
@@ -59,8 +60,6 @@ def send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return
         raise InvalidInputException("Base queue name must be a string.")
     if not isinstance(return_queue, str):
         raise InvalidInputException("Return queue must be a string.")
-    if not isinstance(label, str):
-        raise InvalidInputException("Label must be a string.")
     if not isinstance(priority, int) or priority < 0 or priority > 5:
         raise InvalidInputException("Priority must be an integer between 0 and 5.")
 
