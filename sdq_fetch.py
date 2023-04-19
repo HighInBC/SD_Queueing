@@ -12,15 +12,15 @@ def load_config(config_file="config.json"):
     return config
 
 def handle_job(job):
-    print("Received job:")
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
     path = os.path.join(os.getcwd(), *job["request"]["label"])
-    print(f"Saving images to {path}...")
     if not os.path.exists(path):
         os.makedirs(path)
     images = job["response"]
+    print()
     print(f"Received {len(images)} images. From server {server_id}")
+    print(f"Saving images to {path}...")
     for i, image in enumerate(images):
         print(f"Saving image {i}...")
         filename = f"sd_{seed}_{i}.png"
