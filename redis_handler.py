@@ -1,14 +1,36 @@
 import redis
 import json
 import time
+from sshtunnel import SSHTunnelForwarder
 
 class InvalidInputException(Exception):
     pass
+
+def create_ssh_tunnel(config):
+    """
+    Create an SSH tunnel to the remote server using the provided configuration.
+    """
+    tunnel_config = config["ssh_tunnel"]
+    print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
+    tunnel = SSHTunnelForwarder(
+        (tunnel_config["host"], tunnel_config["port"]),
+        ssh_username=tunnel_config["username"],
+        ssh_pkey=tunnel_config["key_file"],
+        remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
+    )
+    tunnel.start()
+    print("SSH tunnel started.")
+    return tunnel
 
 def connect_to_redis(config):
     if not isinstance(config, dict):
         raise InvalidInputException("Config must be a dictionary.")
 
+    if "ssh_tunnel" in config:
+        tunnel = create_ssh_tunnel(config)
+        config["redis_port"] = tunnel.local_bind_port
+        config["redis_host"] = "127.0.0.1"
+        
     required_keys = ["redis_host", "redis_port"]
     for key in required_keys:
         if key not in config:

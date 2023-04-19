@@ -11,19 +11,6 @@ def load_config(config_file="config.json"):
         config = json.load(f)
     return config
 
-def create_ssh_tunnel(config):
-    tunnel_config = config["ssh_tunnel"]
-    print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
-    tunnel = SSHTunnelForwarder(
-        (tunnel_config["host"], tunnel_config["port"]),
-        ssh_username=tunnel_config["username"],
-        ssh_pkey=tunnel_config["key_file"],
-        remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
-    )
-    tunnel.start()
-    print("SSH tunnel started.")
-    return tunnel
-
 def handle_job(job):
     print("Received job:")
     seed = job["request"]["payload"]["seed"]
@@ -43,10 +30,6 @@ def handle_job(job):
 
 def main():
     config = load_config()
-    tunnel = create_ssh_tunnel(config)
-
-    config["redis_port"] = tunnel.local_bind_port
-    config["redis_host"] = "127.0.0.1"
     try:
         redis_connection = redis_handler.connect_to_redis(config)
     except redis_handler.InvalidInputException as e:

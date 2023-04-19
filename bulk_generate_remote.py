@@ -23,19 +23,6 @@ def parse_args():
     parser.add_argument('-z', '--srz',    type=str,                           help='Search and replace for axis Z in the format: <original>,<alt1>,<alt2>')
     return parser.parse_args()
 
-def create_ssh_tunnel(config):
-    tunnel_config = config["ssh_tunnel"]
-    print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
-    tunnel = SSHTunnelForwarder(
-        (tunnel_config["host"], tunnel_config["port"]),
-        ssh_username=tunnel_config["username"],
-        ssh_pkey=tunnel_config["key_file"],
-        remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
-    )
-    tunnel.start()
-    print("SSH tunnel started.")
-    return tunnel
-
 def combine_arrays(*args):
     if not args:
         return []
@@ -62,11 +49,6 @@ def main():
 
     base_queue_name = config['ingress_queue']
     return_queue = config['return_queue']
-
-    tunnel = create_ssh_tunnel(config)
-
-    config["redis_port"] = tunnel.local_bind_port
-    config["redis_host"] = "127.0.0.1"
 
     redis_connection = redis_handler.connect_to_redis(config)
 
