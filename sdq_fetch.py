@@ -17,19 +17,26 @@ def handle_job(job):
     path = os.path.join(os.getcwd(), *job["request"]["label"])
     if not os.path.exists(path):
         os.makedirs(path)
+    counter_key = "_".join(job["request"]["label"])
+    file_number = counter.get(counter_key, 0)
+    counter[counter_key] = file_number + 1
+    file_number = str(file_number).zfill(4)
     images = job["response"]
     print()
     print(f"Received {len(images)} images. From server {server_id}")
     print(f"Saving images to {path}...")
     for i, image in enumerate(images):
         print(f"Saving image {i}...")
-        filename = f"sd_{seed}_{i}.png"
+        filename = f"{file_number}_{seed}_{i}.png"
         image = base64.b64decode(image)
         with open(os.path.join(path, filename), "wb") as f:
             f.write(image)
 
 def main():
     config = load_config()
+    global counter
+    counter = {}
+
     try:
         redis_connection = redis_handler.connect_to_redis(config)
     except redis_handler.InvalidInputException as e:
@@ -42,7 +49,6 @@ def main():
         try:
             response = redis_handler.read_from_return_queue(redis_connection, return_queue)
             if response is not None:
-                print("Received job:")
                 handle_job(response)
             else:
                 print("No job received. Exiting.")
