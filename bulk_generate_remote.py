@@ -53,9 +53,6 @@ def main():
     redis_connection = redis_handler.connect_to_redis(config)
 
     root_path = 'bulk_images'
-    target_path = os.path.join(root_path, output_path)
-    if not os.path.exists(target_path):
-        os.makedirs(target_path)
 
     with open(target_file, 'r') as f:
         payload = json.load(f)
