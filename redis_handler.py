@@ -25,22 +25,27 @@ def connect_to_redis(config):
 
     if "ssh_tunnel" in config:
         tunnel = create_ssh_tunnel(config)
-        config["redis_port"] = tunnel.local_bind_port
         config["redis_host"] = "127.0.0.1"
+        config["redis_port"] = tunnel.local_bind_port
 
     required_keys = ["redis_host", "redis_port"]
     for key in required_keys:
         if key not in config:
             raise InvalidInputException(f"Config is missing required key: {key}")
 
-    redis_connection = redis.StrictRedis(
-        host=config["redis_host"],
-        port=config["redis_port"],
-        password=config.get("redis_password", None),
-        decode_responses=True
-    )
-    return redis_connection
+    try:
+        redis_connection = redis.StrictRedis(
+            host=config["redis_host"],
+            port=config["redis_port"],
+            password=config.get("redis_password", None),
+            decode_responses=True
+        )
+        if not redis_connection.ping():
+            raise Exception("Unable to ping the Redis server.")
+    except Exception as e:
+        raise InvalidInputException(f"Failed to connect to Redis: {e}")
 
+    return redis_connection
 def read_from_ingress_queue(redis_connection, base_queue_name):
     if not isinstance(redis_connection, redis.StrictRedis):
         raise InvalidInputException("Invalid Redis connection object.")
