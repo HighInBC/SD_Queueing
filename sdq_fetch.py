@@ -14,7 +14,7 @@ def load_config(config_file="config.json"):
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
-    path = os.path.join(os.getcwd(), *job["request"]["label"])
+    path = os.path.join(os.getcwd(), "incoming", *job["request"]["label"])
     if not os.path.exists(path):
         os.makedirs(path)
     counter_key = "_".join(job["request"]["label"])
