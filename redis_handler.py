@@ -1,35 +1,43 @@
 import redis
 import json
 import time
-from sshtunnel import SSHTunnelForwarder
+from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
+
+class TunnelCreationException(Exception):
+    pass
 
 class InvalidInputException(Exception):
     pass
 
-def create_ssh_tunnel(config):
-    tunnel_config = config["ssh_tunnel"]
-    print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
-    tunnel = SSHTunnelForwarder(
-        (tunnel_config["host"], tunnel_config["port"]),
-        ssh_username=tunnel_config["username"],
-        ssh_pkey=tunnel_config["key_file"],
-        remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
-    )
-    tunnel.start()
-    print("SSH tunnel started.")
-    return tunnel
+def create_ssh_tunnel(tunnel_config):
+    try:
+        print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
+        tunnel = SSHTunnelForwarder(
+            tunnel_config["host"], tunnel_config["port"],
+            ssh_username=tunnel_config["username"],
+            ssh_pkey=tunnel_config["key_file"],
+            remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
+        )
+        tunnel.start()
+        print("SSH tunnel started.")
+        return tunnel.local_bind_port
+    except KeyError as e:
+        missing_key = str(e).replace("'", "")
+        raise TunnelCreationException(f"Missing required key in tunnel_config: {missing_key}")
+    except BaseSSHTunnelForwarderError as e:
+        raise TunnelCreationException(f"Failed to create SSH tunnel: {e}")
+    except Exception as e:
+        raise TunnelCreationException(f"Unexpected error occurred while creating SSH tunnel: {e}")
 
 def connect_to_redis(config):
     if not isinstance(config, dict):
         raise InvalidInputException("Config must be a dictionary.")
 
     if "ssh_tunnel" in config:
-        tunnel = create_ssh_tunnel(config)
         config["redis_host"] = "127.0.0.1"
-        config["redis_port"] = tunnel.local_bind_port
+        config["redis_port"] = create_ssh_tunnel(config["ssh_tunnel"])
 
-    required_keys = ["redis_host", "redis_port"]
-    for key in required_keys:
+    for key in ["redis_host", "redis_port"]:
         if key not in config:
             raise InvalidInputException(f"Config is missing required key: {key}")
 
@@ -46,6 +54,7 @@ def connect_to_redis(config):
         raise InvalidInputException(f"Failed to connect to Redis: {e}")
 
     return redis_connection
+
 def read_from_ingress_queue(redis_connection, base_queue_name):
     if not isinstance(redis_connection, redis.StrictRedis):
         raise InvalidInputException("Invalid Redis connection object.")
