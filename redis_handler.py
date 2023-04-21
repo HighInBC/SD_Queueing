@@ -13,7 +13,7 @@ def create_ssh_tunnel(tunnel_config):
     try:
         print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
         tunnel = SSHTunnelForwarder(
-            tunnel_config["host"], tunnel_config["port"],
+            (tunnel_config["host"], tunnel_config["port"]),
             ssh_username=tunnel_config["username"],
             ssh_pkey=tunnel_config["key_file"],
             remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
