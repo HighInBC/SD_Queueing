@@ -12,7 +12,6 @@ def load_config(config_file):
     return config
 
 def main():
-    # first command line argument is the config file
     config_file = "config.json"
     if len(sys.argv) > 1:
         config_file = sys.argv[1]
