@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 import json
 import time
+import sys
 from sshtunnel import SSHTunnelForwarder
 from redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
 from sd_handler import process_stable_diffusion_request
 
-def load_config():
-    """
-    Load configuration from "config.json" and return the configuration dictionary.
-    """
+def load_config(config_file):
     with open("config.json", "r") as config_file:
         config = json.load(config_file)
     return config
 
 def main():
-    config = load_config()
+    # first command line argument is the config file
+    config_file = "config.json"
+    if len(sys.argv) > 1:
+        config_file = sys.argv[1]
+    config = load_config(config_file)
     redis_connection = connect_to_redis(config)
 
     while True:
