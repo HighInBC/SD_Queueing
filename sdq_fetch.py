@@ -14,10 +14,11 @@ def load_config(config_file="config.json"):
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
-    path = os.path.join(os.getcwd(), "incoming", *job["request"]["label"])
+    *label, filename = job["request"]["label"]
+    path = os.path.join(os.getcwd(), "incoming", *label)
     if not os.path.exists(path):
         os.makedirs(path)
-    counter_key = "_".join(job["request"]["label"])
+    counter_key = "_".join(label)
     file_number = counter.get(counter_key, 0)
     counter[counter_key] = file_number + 1
     file_number = str(file_number).zfill(4)
@@ -27,9 +28,11 @@ def handle_job(job):
     print(f"Saving images to {path}...")
     for i, image in enumerate(images):
         print(f"Saving image {i}...")
-        filename = f"{file_number}_{seed}_{i}.png"
+
+        saveas = filename+f"_{file_number}_{seed}_{i}.png"
         image = base64.b64decode(image)
-        with open(os.path.join(path, filename), "wb") as f:
+        print(f"Saving image to {os.path.join(path, saveas)}")
+        with open(os.path.join(path, saveas), "wb") as f:
             f.write(image)
 
 def main():
