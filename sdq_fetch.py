@@ -3,37 +3,43 @@ import json
 import sys
 import os
 import base64
-from sshtunnel import SSHTunnelForwarder
 import redis_handler
+
 
 def load_config(config_file="config.json"):
     with open(config_file, "r") as f:
         config = json.load(f)
     return config
 
+
+def get_image_path(label, seed, index, filename):
+    counter_key = "_".join(label)
+    file_number = counter.get(counter_key, 0)
+    counter[counter_key] = file_number + 1
+    file_number = str(file_number).zfill(4)
+    saveas = f"{filename}_{file_number}_{seed}_{index}.png"
+    return os.path.join("incoming", *label, saveas)
+
+
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
     *label, filename = job["request"]["label"]
     path = os.path.join(os.getcwd(), "incoming", *label)
-    if not os.path.exists(path):
-        os.makedirs(path)
-    counter_key = "_".join(label)
-    file_number = counter.get(counter_key, 0)
-    counter[counter_key] = file_number + 1
-    file_number = str(file_number).zfill(4)
-    images = job["response"]
-    print()
-    print(f"Received {len(images)} images. From server {server_id}")
-    print(f"Saving images to {path}...")
-    for i, image in enumerate(images):
-        print(f"Saving image {i}...")
+    os.makedirs(path, exist_ok=True)
 
-        saveas = filename+f"_{file_number}_{seed}_{i}.png"
-        image = base64.b64decode(image)
-        print(f"Saving image to {os.path.join(path, saveas)}")
-        with open(os.path.join(path, saveas), "wb") as f:
-            f.write(image)
+    images = job["response"]
+    print(f"\nReceived {len(images)} images. From server {server_id}")
+    print(f"Saving images to {path}...")
+
+    for i, image in enumerate(images):
+        image_path = get_image_path(label, seed, i, filename)
+        print(f"Saving image {i} to {image_path}")
+
+        image_data = base64.b64decode(image)
+        with open(os.path.join(os.getcwd(), image_path), "wb") as f:
+            f.write(image_data)
+
 
 def main():
     config = load_config()
@@ -59,6 +65,7 @@ def main():
         except redis_handler.InvalidInputException as e:
             print(f"Error: {e}")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
