@@ -1,7 +1,10 @@
 import requests
 import base64
 import json
+import re
 import random
+from PIL import Image
+from PIL.PngImagePlugin import PngImageFile, PngInfo
 
 class StableDiffusionRequestException(Exception):
     pass
@@ -29,3 +32,49 @@ def process_stable_diffusion_request(payload):
         raise StableDiffusionRequestException("Failed to parse the response JSON.")
 
     return images
+
+
+def decode_payload_string(input_string):
+    if not isinstance(input_string, str):
+        raise ValueError("Expected input_string to be a string, but got a different type.")
+
+    prompt_match = re.match(r'^(.*?)(?=Negative prompt:)', input_string, re.S)
+    prompt = prompt_match.group(1).strip() if prompt_match else ''
+
+    neg_prompt_match = re.search(r'Negative prompt: (.*?)(?=Steps:)', input_string, re.S)
+    negative_prompt = neg_prompt_match.group(1).strip() if neg_prompt_match else ''
+    
+    steps = int(re.search(r'Steps: (\d+)', input_string).group(1))
+    sampler_index = re.search(r'Sampler: (.*?)(?=,)', input_string).group(1).strip()
+    cfg_scale = float(re.search(r'CFG scale: (\d+(\.\d+)?)', input_string).group(1))
+    seed = int(re.search(r'Seed: (\d+)', input_string).group(1))
+    width, height = map(int, re.search(r'Size: (\d+)x(\d+)', input_string).groups())
+    sd_model_checkpoint = re.search(r'Model: (.*?)(?=,)', input_string).group(1).strip()
+    
+    result_dict = {
+        "prompt": prompt,
+        "negative_prompt": negative_prompt,
+        "steps": steps,
+        "sampler_index": sampler_index,
+        "seed": seed,
+        "width": width,
+        "height": height,
+        "cfg_scale": cfg_scale,
+        "restore_faces": True,
+        "batch_size": 2,
+        "sd_model_checkpoint": sd_model_checkpoint,
+        "do_not_save_samples": True,
+        "do_not_save_grid": True
+    }
+    
+    return json.dumps(result_dict, indent=4)
+
+def get_payload_from_png(png_path):
+    with Image.open(png_path) as img:
+        if not isinstance(img, PngImageFile):
+            raise ValueError("The file is not a valid PNG image.")
+        
+        png_info = img.info
+        
+        metadata = {key: png_info[key] for key in png_info}
+        return decode_payload_string(metadata['parameters'])
