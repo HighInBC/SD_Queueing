@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import base64
 import itertools
 import json
 import os
-import random
-import requests
 import redis_handler
-from datetime import datetime
-from sshtunnel import SSHTunnelForwarder
 from sd_handler import get_payload_from_png
 
 def parse_args():
