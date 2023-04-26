@@ -17,7 +17,7 @@ def get_image_path(label, seed, index, filename):
     file_number = counter.get(counter_key, 0)
     counter[counter_key] = file_number + 1
     file_number = str(file_number).zfill(4)
-    saveas = f"{filename}_{file_number}_{seed}_{index}.png"
+    saveas = f"{file_number}_{seed}_{filename}_{index}.png"
     return os.path.join("incoming", *label, saveas)
 
 
