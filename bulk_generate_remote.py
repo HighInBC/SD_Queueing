@@ -10,6 +10,7 @@ import requests
 import redis_handler
 from datetime import datetime
 from sshtunnel import SSHTunnelForwarder
+from sd_handler import get_payload_from_png
 
 def parse_args():
     parser = argparse.ArgumentParser(description='A script to generate images using provided target and server information.')
@@ -24,6 +25,18 @@ def parse_args():
     parser.add_argument('-z', '--srz',      type=str,                help='Search and replace for axis Z in the format: <original>,<alt1>,<alt2>')
     return parser.parse_args()
 
+def load_payload(target_file):
+    file_ext = os.path.splitext(target_file)[1]
+
+    if file_ext == '.json':
+        with open(target_file, 'r') as f:
+            payload = json.load(f)
+    elif file_ext == '.png':
+        payload = get_payload_from_png(target_file)
+    else:
+        raise ValueError("Unsupported file type. Please provide a .json or .png file.")
+
+    return payload
 def combine_arrays(*args):
     if not args:
         return []
@@ -56,8 +69,7 @@ def main():
 
     root_path = 'bulk_images'
 
-    with open(target_file, 'r') as f:
-        payload = json.load(f)
+    payload = load_payload(target_file)
 
     changes         = combine_arrays(srx, sry, srz)
     originals       = changes[0]
