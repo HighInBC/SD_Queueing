@@ -11,7 +11,8 @@ def main():
 
     try:
         payload = get_payload_from_png(args.image_path)
-        print(payload)
+        print(json.dumps(payload, indent=4))
+
     except Exception as e:
         print(f"Error: {e}")
 
