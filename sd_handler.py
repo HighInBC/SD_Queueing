@@ -67,7 +67,7 @@ def decode_payload_string(input_string):
         "do_not_save_grid": True
     }
     
-    return json.dumps(result_dict, indent=4)
+    return result_dict
 
 def get_payload_from_png(png_path):
     with Image.open(png_path) as img:
