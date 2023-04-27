@@ -1,6 +1,4 @@
 import requests
-import base64
-import json
 import re
 import random
 from PIL import Image
