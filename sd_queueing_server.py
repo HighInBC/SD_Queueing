@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import json
 import time
-import sys
 import signal
 import argparse
-from sshtunnel import SSHTunnelForwarder
 from sdq.redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
 from sdq.sd_handler import process_stable_diffusion_request
 
@@ -41,11 +39,11 @@ def main(priority, delay, config_file):
         return_queue = response["return_queue"]
         print(json.dumps(response, indent=4))
         if payload is not None:
-            base64_images = process_stable_diffusion_request(payload)
-            send_response_to_return_queue(redis_connection, return_queue, response, base64_images, config["server_id"])
             if interrupted:
                 print("Interrupted. Exiting.")
                 break
+            base64_images = process_stable_diffusion_request(payload)
+            send_response_to_return_queue(redis_connection, return_queue, response, base64_images, config["server_id"])
             if delay > 0:
                 print(f"Waiting {delay} seconds...")
                 time.sleep(delay)

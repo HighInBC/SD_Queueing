@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 import json
 import sys
-import os
-import base64
-from sshtunnel import SSHTunnelForwarder
 import sdq.redis_handler
 
 def load_config(config_file="config.json"):
