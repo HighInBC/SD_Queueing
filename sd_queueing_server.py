@@ -16,9 +16,6 @@ def signal_handler(signum, frame):
     interrupted = True
     print("Stop signal received. Ending after current job. Press Ctrl+C again to force quit.")
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-
 def load_config(config_file):
     with open(config_file, "r") as f:
         config = json.load(f)
@@ -38,6 +35,9 @@ def main(priority, delay, config_file):
     config = load_config(config_file)
     redis_connection = connect_to_redis(config)
     block_until_api_ready()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
 
     while True:
         print("Reading from ingress queue...")
