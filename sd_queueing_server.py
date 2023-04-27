@@ -3,13 +3,13 @@ import json
 import time
 import sys
 import signal
+import argparse
 from sshtunnel import SSHTunnelForwarder
 from sdq.redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
 from sdq.sd_handler import process_stable_diffusion_request
-# Global variable to track whether the program has been interrupted
+
 interrupted = False
 
-# Define the signal handler function
 def signal_handler(signum, frame):
     global interrupted
     interrupted = True
@@ -19,20 +19,24 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 def load_config(config_file):
-    with open("config.json", "r") as config_file:
-        config = json.load(config_file)
+    with open(config_file, "r") as f:
+        config = json.load(f)
     return config
 
-def main():
-    config_file = "config.json"
-    if len(sys.argv) > 1:
-        config_file = sys.argv[1]
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--priority", type=int, default=0, help="The minimum priority to work on, anything below this will be ignored (default 0)")
+    parser.add_argument("-d", "--delay", type=int, default=0, help="Wait this long in between processing requests (default 0)")
+    parser.add_argument("-c", "--config", type=str, default="config.json", help="The config file (default config.json)")
+    return parser.parse_args()
+
+def main(priority, delay, config_file):
     config = load_config(config_file)
     redis_connection = connect_to_redis(config)
 
     while True:
         print("Reading from ingress queue...")
-        response = read_from_ingress_queue(redis_connection, config["ingress_queue"])
+        response = read_from_ingress_queue(redis_connection, config["ingress_queue"], priority)
         payload = response["payload"]
         return_queue = response["return_queue"]
         print(json.dumps(response, indent=4))
@@ -42,9 +46,13 @@ def main():
             if interrupted:
                 print("Interrupted. Exiting.")
                 break
+            if delay > 0:
+                print(f"Waiting {delay} seconds...")
+                time.sleep(delay)
         else:
             print("Waiting for job...")
             time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.priority, args.delay, args.config)
