@@ -32,6 +32,7 @@ def load_payload(target_file):
         raise ValueError("Unsupported file type. Please provide a .json or .png file.")
 
     return payload
+
 def combine_arrays(*args):
     if not args:
         return []
@@ -65,6 +66,7 @@ def main():
     root_path = 'bulk_images'
 
     payload = load_payload(target_file)
+    print("Payload loaded: {}".format(payload))
 
     changes         = combine_arrays(srx, sry, srz)
     originals       = changes[0]
