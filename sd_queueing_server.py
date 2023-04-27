@@ -2,9 +2,21 @@
 import json
 import time
 import sys
+import signal
 from sshtunnel import SSHTunnelForwarder
 from sdq.redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
 from sdq.sd_handler import process_stable_diffusion_request
+# Global variable to track whether the program has been interrupted
+interrupted = False
+
+# Define the signal handler function
+def signal_handler(signum, frame):
+    global interrupted
+    interrupted = True
+    print("Stop signal received. Ending after current job.")
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 def load_config(config_file):
     with open("config.json", "r") as config_file:
@@ -27,6 +39,9 @@ def main():
         if payload is not None:
             base64_images = process_stable_diffusion_request(payload)
             send_response_to_return_queue(redis_connection, return_queue, response, base64_images, config["server_id"])
+            if interrupted:
+                print("Interrupted. Exiting.")
+                break
         else:
             print("Waiting for job...")
             time.sleep(1)
