@@ -4,7 +4,7 @@ import time
 import signal
 import argparse
 from sdq.redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
-from sdq.sd_handler import process_stable_diffusion_request
+from sdq.sd_handler import block_until_api_ready, process_stable_diffusion_request
 
 interrupted = False
 
@@ -31,9 +31,13 @@ def parse_args():
     parser.add_argument("-c", "--config", type=str, default="config.json", help="The config file (default config.json)")
     return parser.parse_args()
 
+def wait_for_api(config):
+    pass
+
 def main(priority, delay, config_file):
     config = load_config(config_file)
     redis_connection = connect_to_redis(config)
+    block_until_api_ready()
 
     while True:
         print("Reading from ingress queue...")

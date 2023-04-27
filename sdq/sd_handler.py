@@ -1,6 +1,7 @@
 import requests
 import re
 import random
+import time
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile, PngInfo
 
@@ -76,3 +77,14 @@ def get_payload_from_png(png_path):
         
         metadata = {key: png_info[key] for key in png_info}
         return decode_payload_string(metadata['parameters'])
+
+def block_until_api_ready(interval=5):
+    while True:
+        try:
+            response = requests.get("http://127.0.0.1:7860/sdapi/v1/sd-models")
+            if response.status_code == 200:
+                return response
+        except:
+            pass
+        print("Waiting for the API to become ready...")
+        time.sleep(interval)
