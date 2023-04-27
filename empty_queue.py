@@ -4,7 +4,7 @@ import sys
 import os
 import base64
 from sshtunnel import SSHTunnelForwarder
-import redis_handler
+import sdq.redis_handler
 
 def load_config(config_file="config.json"):
     with open(config_file, "r") as f:
@@ -20,8 +20,8 @@ def main():
     counter = {}
 
     try:
-        redis_connection = redis_handler.connect_to_redis(config)
-    except redis_handler.InvalidInputException as e:
+        redis_connection = sdq.redis_handler.connect_to_redis(config)
+    except sdq.redis_handler.InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
@@ -29,14 +29,14 @@ def main():
 
     while True:
         try:
-            response = redis_handler.read_from_return_queue(redis_connection, queue)
+            response = sdq.redis_handler.read_from_return_queue(redis_connection, queue)
             if response is not None:
                 print("Received job:")
                 handle_job(response)
             else:
                 print("No job received. Exiting.")
                 break
-        except redis_handler.InvalidInputException as e:
+        except sdq.redis_handler.InvalidInputException as e:
             print(f"Error: {e}")
             sys.exit(1)
 

@@ -4,8 +4,8 @@ import argparse
 import itertools
 import json
 import os
-import redis_handler
-from sd_handler import get_payload_from_png
+import sdq.redis_handler
+from sdq.sd_handler import get_payload_from_png
 
 def parse_args():
     parser = argparse.ArgumentParser(description='A script to generate images using provided target and server information.')
@@ -60,7 +60,7 @@ def main():
     base_queue_name = config['ingress_queue']
     return_queue = config['return_queue']
 
-    redis_connection = redis_handler.connect_to_redis(config)
+    redis_connection = sdq.redis_handler.connect_to_redis(config)
 
     root_path = 'bulk_images'
 
@@ -83,7 +83,7 @@ def main():
 
             payload['prompt'] = prompt
             payload['batch_size'] = batch_size
-            redis_handler.send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, [root_path,output_path,*change], priority)
+            sdq.redis_handler.send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, [root_path,output_path,*change], priority)
             print(".")
         print("Done sending jobs for loop: {}".format(i))
     print("Done generating images.")

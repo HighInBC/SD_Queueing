@@ -3,8 +3,8 @@ import json
 import time
 import sys
 from sshtunnel import SSHTunnelForwarder
-from redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
-from sd_handler import process_stable_diffusion_request
+from sdq.redis_handler import connect_to_redis, read_from_ingress_queue, send_response_to_return_queue
+from sdq.sd_handler import process_stable_diffusion_request
 
 def load_config(config_file):
     with open("config.json", "r") as config_file:

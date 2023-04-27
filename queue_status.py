@@ -2,7 +2,7 @@
 import json
 import sys
 
-import redis_handler
+import sdq.redis_handler
 
 def load_config(config_file="config.json"):
     with open(config_file, "r") as f:
@@ -24,8 +24,8 @@ def get_queue_info(redis_connection, ingress_queue, return_queue):
 def main():
     config = load_config()
     try:
-        redis_connection = redis_handler.connect_to_redis(config)
-    except redis_handler.InvalidInputException as e:
+        redis_connection = sdq.redis_handler.connect_to_redis(config)
+    except sdq.redis_handler.InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 

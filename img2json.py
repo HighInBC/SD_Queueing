@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
-from sd_handler import get_payload_from_png
+from sdq.sd_handler import get_payload_from_png
 
 def main():
     parser = argparse.ArgumentParser(description="Get JSON payload from a PNG image.")
