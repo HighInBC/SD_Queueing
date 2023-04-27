@@ -48,7 +48,7 @@ def main():
 
     try:
         redis_connection = sdq.redis_handler.connect_to_redis(config)
-    except redis_handler.InvalidInputException as e:
+    except sdq.redis_handler.InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
