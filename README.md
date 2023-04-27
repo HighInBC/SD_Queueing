@@ -1,6 +1,6 @@
 # SD_Queueing
 
-**Note:** This software is still in development and not ready for use yet.
+**Note:** This software is still in development and not ready for use yet. ***This README is out of date***
 
 SD_Queueing is a Redis-based queuing system for Stable Diffusion, designed for those who appreciate consecutive vowels.
 
