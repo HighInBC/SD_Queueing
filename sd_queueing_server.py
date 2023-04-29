@@ -22,6 +22,9 @@ def signal_handler(signum, frame):
     interrupted = True
     print("Stop signal received. Ending after current job. Press Ctrl+C again to force quit.")
 
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 def load_config(config_file):
     with open(config_file, "r") as f:
         config = json.load(f)
@@ -34,18 +37,12 @@ def parse_args():
     parser.add_argument("-c", "--config", type=str, default="config.json", help="The config file (default config.json)")
     return parser.parse_args()
 
-def wait_for_api(config):
-    pass
-
 def main(priority, delay, config_file):
     global interrupted
     global working
     config = load_config(config_file)
     redis_connection = connect_to_redis(config)
     block_until_api_ready()
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
 
     while True:
         print("Reading from ingress queue...")
@@ -60,7 +57,7 @@ def main(priority, delay, config_file):
             working = False
             if interrupted:
                 print("Interrupted. Exiting.")
-                break
+                exit(0)
             if delay > 0:
                 print(f"Waiting {delay} seconds...")
                 time.sleep(delay)
