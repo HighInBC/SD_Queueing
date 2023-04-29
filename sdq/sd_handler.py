@@ -8,30 +8,54 @@ from PIL.PngImagePlugin import PngImageFile, PngInfo
 class StableDiffusionRequestException(Exception):
     pass
 
+class StableDiffusionApiClient:
+    def __init__(self, requests_lib=None):
+        self._requests = requests_lib or requests
+
+    def process_stable_diffusion_request(self, payload):
+        if not isinstance(payload, dict):
+            raise StableDiffusionRequestException("Payload must be a dictionary.")
+        if "prompt" not in payload:
+            raise StableDiffusionRequestException("Payload must contain the 'prompt' key.")
+
+        payload['seed'] = random.randint(0, 2**32-1)
+
+        try:
+            response = self._requests.post("http://127.0.0.1:7860/sdapi/v1/txt2img", json=payload)
+            response.raise_for_status()
+        except self._requests.exceptions.RequestException as e:
+            raise StableDiffusionRequestException(f"Failed to send request: {e}")
+
+        try:
+            images = response.json()['images']
+        except KeyError:
+            print(response.json())
+            raise StableDiffusionRequestException("The 'images' key is missing from the response.")
+        except ValueError:
+            raise StableDiffusionRequestException("Failed to parse the response JSON.")
+
+        return images
+
+    def block_until_api_ready(self, interval=5):
+        while True:
+            try:
+                response = self._requests.get("http://127.0.0.1:7860/sdapi/v1/sd-models")
+                if response.status_code == 200:
+                    return response
+            except:
+                pass
+            print("Waiting for the API to become ready...")
+            time.sleep(interval)
+
 def process_stable_diffusion_request(payload):
-    if not isinstance(payload, dict):
-        raise StableDiffusionRequestException("Payload must be a dictionary.")
-    if "prompt" not in payload:
-        raise StableDiffusionRequestException("Payload must contain the 'prompt' key.")
-
-    payload['seed'] = random.randint(0, 2**32-1)
+    api_client = StableDiffusionApiClient()
 
     try:
-        response = requests.post("http://127.0.0.1:7860/sdapi/v1/txt2img", json=payload)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise StableDiffusionRequestException(f"Failed to send request: {e}")
-
-    try:
-        images = response.json()['images']
-    except KeyError:
-        print(response.json())
-        raise StableDiffusionRequestException("The 'images' key is missing from the response.")
-    except ValueError:
-        raise StableDiffusionRequestException("Failed to parse the response JSON.")
+        images = api_client.process_stable_diffusion_request(payload)
+    except StableDiffusionRequestException as e:
+        raise e
 
     return images
-
 
 def decode_payload_string(input_string):
     if not isinstance(input_string, str):
@@ -72,19 +96,14 @@ def get_payload_from_png(png_path):
     with Image.open(png_path) as img:
         if not isinstance(img, PngImageFile):
             raise ValueError("The file is not a valid PNG image.")
-        
         png_info = img.info
-        
         metadata = {key: png_info[key] for key in png_info}
         return decode_payload_string(metadata['parameters'])
 
 def block_until_api_ready(interval=5):
-    while True:
-        try:
-            response = requests.get("http://127.0.0.1:7860/sdapi/v1/sd-models")
-            if response.status_code == 200:
-                return response
-        except:
-            pass
-        print("Waiting for the API to become ready...")
-        time.sleep(interval)
+    api_client = StableDiffusionApiClient()
+    try:
+        response = api_client.block_until_api_ready(interval)
+    except Exception as e:
+        raise e
+    return response
