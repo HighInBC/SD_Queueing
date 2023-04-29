@@ -68,10 +68,10 @@ def decode_payload_string(input_string):
     negative_prompt = neg_prompt_match.group(1).strip() if neg_prompt_match else ''
     
     steps = int(re.search(r'Steps: (\d+)', input_string).group(1))
-    sampler_index = re.search(r'Sampler: (.*?)(?=,)', input_string).group(1).strip()
-    cfg_scale = float(re.search(r'CFG scale: (\d+(\.\d+)?)', input_string).group(1))
-    seed = int(re.search(r'Seed: (\d+)', input_string).group(1))
-    width, height = map(int, re.search(r'Size: (\d+)x(\d+)', input_string).groups())
+    sampler_index = re.search(r'Sampler: (.*?)(?=,|$)', input_string).group(1).strip()
+    cfg_scale = float(re.search(r'CFG scale: (\d+(\.\d+)?)(?=,|$)', input_string).group(1))
+    seed = int(re.search(r'Seed: (\d+)(?=,|$)', input_string).group(1))
+    width, height = map(int, re.search(r'Size: (\d+)x(\d+)(?=,|$)', input_string).groups())
     sd_model_checkpoint = re.search(r'Model: (.*?)(?=,|$)', input_string).group(1).strip()
     
     result_dict = {
