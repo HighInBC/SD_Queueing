@@ -72,7 +72,7 @@ def decode_payload_string(input_string):
     cfg_scale = float(re.search(r'CFG scale: (\d+(\.\d+)?)', input_string).group(1))
     seed = int(re.search(r'Seed: (\d+)', input_string).group(1))
     width, height = map(int, re.search(r'Size: (\d+)x(\d+)', input_string).groups())
-    sd_model_checkpoint = re.search(r'Model: (.*?)(?=,)', input_string).group(1).strip()
+    sd_model_checkpoint = re.search(r'Model: (.*?)(?=,|$)', input_string).group(1).strip()
     
     result_dict = {
         "prompt": prompt,
