@@ -4,6 +4,7 @@ import sys
 import os
 import base64
 import sdq.redis_handler
+import datetime
 
 
 def load_config(config_file="config.json"):
@@ -17,24 +18,24 @@ def get_image_path(label, seed, index, filename):
     file_number = counter.get(counter_key, 0)
     counter[counter_key] = file_number + 1
     file_number = str(file_number).zfill(4)
-    saveas = f"{file_number}_{seed}_{filename}_{index}.png"
-    return os.path.join("incoming", *label, saveas)
+    date = datetime.datetime.now().strftime("%Y-%m-%d")
+    path = os.path.join("incoming", date, *label)
+    os.makedirs(path, exist_ok=True)
+    path = os.path.join(path, f"{file_number}_{seed}_{filename}_{index}.png")
+    return path
 
 
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
     *label, filename = job["request"]["label"]
-    path = os.path.join(os.getcwd(), "incoming", *label)
-    os.makedirs(path, exist_ok=True)
 
     images = job["response"]
     print(f"\nReceived {len(images)} images. From server {server_id}")
-    print(f"Saving images to {path}...")
 
     for i, image in enumerate(images):
         image_path = get_image_path(label, seed, i, filename)
-        print(f"Saving image {i} to {image_path}")
+        print(f"\tSaving image {i} to {image_path}")
 
         image_data = base64.b64decode(image)
         with open(os.path.join(os.getcwd(), image_path), "wb") as f:
