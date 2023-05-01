@@ -66,6 +66,7 @@ def read_from_ingress_queue(redis_connection, base_queue_name, min_priority=0):
         for queue_name in ingress_queues:
             job = redis_connection.blpop(queue_name, timeout=0.01)
             if job is not None:
+                print(f"Received job from {queue_name}.")
                 job = json.loads(job[1])
                 return job
         time.sleep(.25)
