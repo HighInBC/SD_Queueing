@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-import json
 import sys
+import json
 
 import sdq.redis_handler
-
-def load_config(config_file="config.json"):
-    with open(config_file, "r") as f:
-        config = json.load(f)
-    return config
+from sdq.config_parser import ConfigParser  # Import the ConfigParser class
 
 def get_queue_info(redis_connection, ingress_queue, return_queue):
     info = {}
@@ -22,15 +18,18 @@ def get_queue_info(redis_connection, ingress_queue, return_queue):
     return info
 
 def main():
-    config = load_config()
+    # Create an instance of the ConfigParser class
+    config_parser = ConfigParser(config_file='config.json')
+
     try:
-        redis_connection = sdq.redis_handler.connect_to_redis(config)
+        redis_connection = sdq.redis_handler.connect_to_redis(config_parser)
     except sdq.redis_handler.InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
-    ingress_queue = config.get("ingress_queue", "default_ingress_queue")
-    return_queue = config.get("return_queue", "default_return_queue")
+    # Access the values using the properties of the ConfigParser class
+    ingress_queue = config_parser.ingress_queue
+    return_queue = config_parser.return_queue
 
     queue_info = get_queue_info(redis_connection, ingress_queue, return_queue)
 

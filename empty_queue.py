@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
-import json
 import sys
 import sdq.redis_handler
-
-def load_config(config_file="config.json"):
-    with open(config_file, "r") as f:
-        config = json.load(f)
-    return config
+from sdq.config_parser import ConfigParser
 
 def handle_job(job):
     print("Emptying queue...")
 
 def main():
-    config = load_config()
+    config = ConfigParser(config_file='config.json')
     global counter
     counter = {}
 
