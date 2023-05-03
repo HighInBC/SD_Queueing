@@ -6,6 +6,7 @@ import json
 import os
 import sdq.redis_handler
 from sdq.sd_handler import get_payload_from_png
+from sdq.config_parser import ConfigParser
 
 def parse_args():
     parser = argparse.ArgumentParser(description='A script to generate images using provided target and server information.')
@@ -55,12 +56,9 @@ def main():
     sry = args.sry.split(',') if args.sry else None
     srz = args.srz.split(',') if args.srz else None
 
-    with open(config_file, 'r') as f:
-        config = json.load(f)
-
-    base_queue_name = config['ingress_queue']
-    return_queue = config['return_queue']
-
+    config = ConfigParser(config_file=config_file)
+    base_queue_name = config.ingress_queue
+    return_queue = config.return_queue
     redis_connection = sdq.redis_handler.connect_to_redis(config)
 
     root_path = 'bulk_images'
