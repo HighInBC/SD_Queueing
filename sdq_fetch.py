@@ -3,15 +3,9 @@ import json
 import sys
 import os
 import base64
-import sdq.redis_handler
 import datetime
-
-
-def load_config(config_file="config.json"):
-    with open(config_file, "r") as f:
-        config = json.load(f)
-    return config
-
+from sdq.redis_handler import connect_to_redis, read_from_return_queue, InvalidInputException
+from sdq.config_parser import ConfigParser
 
 def get_image_path(label, seed, index, filename):
     counter_key = "_".join(label)
@@ -43,30 +37,29 @@ def handle_job(job):
 
 
 def main():
-    config = load_config()
+    config = ConfigParser(config_file='config.json')
     global counter
     counter = {}
 
     try:
-        redis_connection = sdq.redis_handler.connect_to_redis(config)
-    except sdq.redis_handler.InvalidInputException as e:
+        redis_connection = connect_to_redis(config)
+    except InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
-    return_queue = config.get("return_queue", "default_return_queue")
+    return_queue = config.return_queue or "default_return_queue"
 
     while True:
         try:
-            response = sdq.redis_handler.read_from_return_queue(redis_connection, return_queue)
+            response = read_from_return_queue(redis_connection, return_queue)
             if response is not None:
                 handle_job(response)
             else:
                 print("No job received. Exiting.")
                 break
-        except sdq.redis_handler.InvalidInputException as e:
+        except InvalidInputException as e:
             print(f"Error: {e}")
             sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

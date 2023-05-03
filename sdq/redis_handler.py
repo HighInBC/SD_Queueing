@@ -2,6 +2,7 @@ import redis
 import json
 import time
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
+from sdq.config_parser import ConfigParser
 
 class TunnelCreationException(Exception):
     pass
@@ -9,43 +10,60 @@ class TunnelCreationException(Exception):
 class InvalidInputException(Exception):
     pass
 
-def create_ssh_tunnel(tunnel_config):
+def create_ssh_tunnel(config):
+    if not isinstance(config, ConfigParser):
+        raise TunnelCreationException("Config must be an instance of the ConfigParser class.")
+
+    ssh_tunnel_config = config.ssh_tunnel
+    if not ssh_tunnel_config:
+        raise TunnelCreationException("Missing SSH tunnel configuration.")
+
     try:
-        print("Creating SSH tunnel to {}@{}:{}".format(tunnel_config["username"], tunnel_config["host"], tunnel_config["port"]))
+        print("Creating SSH tunnel to {}@{}:{}".format(
+            config.ssh_tunnel_username,
+            config.ssh_tunnel_host,
+            config.ssh_tunnel_port
+        ))
         tunnel = SSHTunnelForwarder(
-            (tunnel_config["host"], tunnel_config["port"]),
-            ssh_username=tunnel_config["username"],
-            ssh_pkey=tunnel_config["key_file"],
-            remote_bind_address=(tunnel_config["remote_bind_address"], tunnel_config["remote_bind_port"])
+            (config.ssh_tunnel_host, config.ssh_tunnel_port),
+            ssh_username=config.ssh_tunnel_username,
+            ssh_pkey=config.ssh_tunnel_key_file,
+            remote_bind_address=(
+                config.ssh_tunnel_remote_bind_address,
+                config.ssh_tunnel_remote_bind_port
+            )
         )
         tunnel.start()
         print("SSH tunnel started.")
         return tunnel.local_bind_port
-    except KeyError as e:
-        missing_key = str(e).replace("'", "")
-        raise TunnelCreationException(f"Missing required key in tunnel_config: {missing_key}")
+    except AttributeError as e:
+        missing_key = str(e).split("'")[1]  # Extract the attribute name from the exception message
+        raise TunnelCreationException(f"Missing required attribute in config: {missing_key}")
     except BaseSSHTunnelForwarderError as e:
         raise TunnelCreationException(f"Failed to create SSH tunnel: {e}")
     except Exception as e:
         raise TunnelCreationException(f"Unexpected error occurred while creating SSH tunnel: {e}")
-
+    
 def connect_to_redis(config):
-    if not isinstance(config, dict):
-        raise InvalidInputException("Config must be a dictionary.")
+    if not isinstance(config, ConfigParser):
+        raise InvalidInputException("Config must be an instance of the ConfigParser class.")
 
-    if "ssh_tunnel" in config:
-        config["redis_host"] = "127.0.0.1"
-        config["redis_port"] = create_ssh_tunnel(config["ssh_tunnel"])
+    redis_host = config.redis_host
+    redis_port = config.redis_port
 
-    for key in ["redis_host", "redis_port"]:
-        if key not in config:
-            raise InvalidInputException(f"Config is missing required key: {key}")
+    # If an SSH tunnel is used, update the redis_host and redis_port accordingly
+    if config.ssh_tunnel:
+        redis_host = "127.0.0.1"
+        redis_port = create_ssh_tunnel(config)
+
+    if not redis_host or not redis_port:
+        raise InvalidInputException("Config is missing required keys: redis_host and/or redis_port")
 
     try:
         redis_connection = redis.StrictRedis(
-            host=config["redis_host"],
-            port=config["redis_port"],
-            password=config.get("redis_password", None),
+            host=redis_host,
+            port=redis_port,
+            password=config.redis_password,  # Assuming that the ConfigParser class has a property for "redis_password"
             decode_responses=True
         )
         if not redis_connection.ping():
