@@ -87,7 +87,6 @@ def main():
             payload['batch_size'] = batch_size
             sdq.redis_handler.send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, [root_path,output_path,*change], priority)
             print(".")
-        print("Done sending jobs for loop: {}".format(i))
     print("Done generating images.")
 
 if __name__ == "__main__":
