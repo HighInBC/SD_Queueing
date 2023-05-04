@@ -102,7 +102,7 @@ def send_response_to_return_queue(redis_connection, return_queue, original_reque
     response_str = json.dumps(response_obj)
     redis_connection.rpush(return_queue, response_str)
 
-def send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, label, priority=0):
+def send_job_to_ingress_queue(redis_connection, base_queue_name, payloads, return_queue, label, priority=0):
     if not isinstance(redis_connection, redis.StrictRedis):
         raise InvalidInputException("Invalid Redis connection object.")
     if not isinstance(base_queue_name, str):
@@ -112,10 +112,13 @@ def send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return
     if not isinstance(priority, int) or priority < 0 or priority > 5:
         raise InvalidInputException("Priority must be an integer between 0 and 5.")
 
+    if not isinstance(payloads, list):
+        payloads = [payloads]
+
     queue_name = f"{base_queue_name}_priority_{priority}"
-    job = {"payload": payload, "return_queue": return_queue, "label": label}
-    job_str = json.dumps(job)
-    redis_connection.rpush(queue_name, job_str)
+
+    jobs_str = [json.dumps({"payload": payload, "return_queue": return_queue, "label": label}) for payload in payloads]
+    redis_connection.rpush(queue_name, *jobs_str)
 
 def read_from_return_queue(redis_connection, return_queue, timeout=None):
     if not isinstance(redis_connection, redis.StrictRedis):

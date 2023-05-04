@@ -71,6 +71,7 @@ def main():
     original_prompt = payload['prompt']
     loops_needed = image_count / len(changes) // batch_size
     print("Loops needed: {}".format(loops_needed))
+    jobs = []
     for i in range(int(loops_needed)):
         print("Loop: {}".format(i))
         for change in changes:
@@ -80,11 +81,11 @@ def main():
                     print("Error: Original not found in prompt: "+originals[i])
                     exit()
                 prompt = prompt.replace(originals[i], change[i], 1)
-
             payload['prompt'] = prompt
             payload['batch_size'] = batch_size
-            send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, [root_path,output_path,*change], priority)
+            jobs.append(payload.copy())
             print(".")
+    send_job_to_ingress_queue(redis_connection, base_queue_name, jobs, return_queue, [root_path,output_path,*change], priority)
     print("Done generating images.")
 
 if __name__ == "__main__":
