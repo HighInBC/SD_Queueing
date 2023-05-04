@@ -51,7 +51,6 @@ def connect_to_redis(config):
     redis_host = config.redis_host
     redis_port = config.redis_port
 
-    # If an SSH tunnel is used, update the redis_host and redis_port accordingly
     if config.ssh_tunnel:
         redis_host = "127.0.0.1"
         redis_port = create_ssh_tunnel(config)
@@ -63,7 +62,7 @@ def connect_to_redis(config):
         redis_connection = redis.StrictRedis(
             host=redis_host,
             port=redis_port,
-            password=config.redis_password,  # Assuming that the ConfigParser class has a property for "redis_password"
+            password=config.redis_password,
             decode_responses=True
         )
         if not redis_connection.ping():
