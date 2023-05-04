@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-import sdq.redis_handler
+from sdq.redis_handler import connect_to_redis, read_from_return_queue, InvalidInputException
 from sdq.config_parser import ConfigParser
 
 def handle_job(job):
@@ -12,8 +12,8 @@ def main():
     counter = {}
 
     try:
-        redis_connection = sdq.redis_handler.connect_to_redis(config)
-    except sdq.redis_handler.InvalidInputException as e:
+        redis_connection = connect_to_redis(config)
+    except InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
@@ -21,14 +21,14 @@ def main():
 
     while True:
         try:
-            response = sdq.redis_handler.read_from_return_queue(redis_connection, queue)
+            response = read_from_return_queue(redis_connection, queue)
             if response is not None:
                 print("Received job:")
                 handle_job(response)
             else:
                 print("No job received. Exiting.")
                 break
-        except sdq.redis_handler.InvalidInputException as e:
+        except InvalidInputException as e:
             print(f"Error: {e}")
             sys.exit(1)
 

@@ -2,7 +2,7 @@
 import sys
 import json
 
-import sdq.redis_handler
+from sdq.redis_handler import connect_to_redis, InvalidInputException
 from sdq.config_parser import ConfigParser  # Import the ConfigParser class
 
 def get_queue_info(redis_connection, ingress_queue, return_queue):
@@ -22,8 +22,8 @@ def main():
     config_parser = ConfigParser(config_file='config.json')
 
     try:
-        redis_connection = sdq.redis_handler.connect_to_redis(config_parser)
-    except sdq.redis_handler.InvalidInputException as e:
+        redis_connection = connect_to_redis(config_parser)
+    except InvalidInputException as e:
         print(f"Error: {e}")
         sys.exit(1)
 
