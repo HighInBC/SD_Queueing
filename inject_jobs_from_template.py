@@ -71,15 +71,15 @@ def main():
     original_prompt = payload['prompt']
     loops_needed = image_count / len(changes) // batch_size
     print("Loops needed: {}".format(loops_needed))
-    for i in range(int(loops_needed)):
-        print("Loop: {}".format(i))
+    for loop_index in range(int(loops_needed)):
+        print("Loop: {}".format(loop_index))
         for change in changes:
             prompt = original_prompt
-            for i in range(len(change)): 
-                if originals[i] not in prompt:
-                    print("Error: Original not found in prompt: "+originals[i])
+            for change_index in range(len(change)): 
+                if originals[change_index] not in prompt:
+                    print("Error: Original not found in prompt: "+originals[change_index])
                     exit()
-                prompt = prompt.replace(originals[i], change[i], 1)
+                prompt = prompt.replace(originals[change_index], change[change_index], 1)
 
             payload['prompt'] = prompt
             payload['batch_size'] = batch_size
