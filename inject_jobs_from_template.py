@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument('-c', '--config',   type=str, required=True, help='The JSON file defining the redis connection.')
     parser.add_argument('-s', '--size',     type=int, required=True, help='The number of images to generate total.')
     parser.add_argument('-b', '--batch',    type=int, default=2,     help='The number of images to generate per batch(limited by server max).')
-    parser.add_argument('-l', '--label',     type=str, required=True, help='The base label to store the files.')
+    parser.add_argument('-l', '--label',    type=str, required=True, help='The base label to store the files.')
     parser.add_argument('-p', '--priority', type=int, default=0,     help='The priority of the job. Higher priority jobs are processed first.')
     parser.add_argument('-x', '--srx',      type=str,                help='Search and replace for axis X in the format: <original>,<alt1>,<alt2>')
     parser.add_argument('-y', '--sry',      type=str,                help='Search and replace for axis Y in the format: <original>,<alt1>,<alt2>')
@@ -47,7 +47,7 @@ def main():
 
     target_file  = args.target
     image_count  = args.size
-    output_label  = args.label
+    output_label = args.label
     batch_size   = args.batch
     config_file  = args.config
     priority     = args.priority
