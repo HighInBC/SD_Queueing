@@ -79,7 +79,7 @@ def main():
             for change_index in range(len(change)): 
                 if originals[change_index] not in prompt:
                     print("Error: Original not found in prompt: "+originals[change_index])
-                    exit()
+                    exit(1)
                 prompt = prompt.replace(originals[change_index], change[change_index], 1)
             payload['prompt'] = prompt
             payload['batch_size'] = batch_size
