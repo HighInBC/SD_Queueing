@@ -23,7 +23,8 @@ def get_highest_prefix(path):
 def get_image_path(label, seed, index, filename):
     global highest_prefixes
 
-    counter_key = "_".join(label)
+    counter_key = "_".join([str(l) for l in label])
+    date = datetime.datetime.now().strftime("%Y-%m-%d")
     if counter_key not in highest_prefixes:
         path = os.path.join("incoming", date, *label)
         os.makedirs(path, exist_ok=True)
@@ -31,7 +32,6 @@ def get_image_path(label, seed, index, filename):
     else:
         highest_prefixes[counter_key] += 1
     
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
     file_number = str(highest_prefixes[counter_key]).zfill(4)
 
     path = os.path.join("incoming", date, *label)
@@ -42,6 +42,9 @@ def get_image_path(label, seed, index, filename):
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
     server_id = job.get("server_id", "unknown")
+    if len(job["request"]["label"]) < 2:
+        print(f"Error: Label must contain at least 2 elements, path and filename.")
+        return
     *label, filename = job["request"]["label"]
 
     images = job["response"]
