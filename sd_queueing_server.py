@@ -47,13 +47,18 @@ def main(priority, delay, config_file):
     while True:
         print("Reading from ingress queue...")
         response = read_from_ingress_queue(redis_connection, ingress_queue, priority)
+        print("Received response...")
         payload = response["payload"]
         return_queue = response["return_queue"]
         print(json.dumps(response, indent=4))
         if payload is not None:
             working = True
+            print("Processing request...")
             base64_images = process_stable_diffusion_request(payload)
+            print("Sending response...")
             send_response_to_return_queue(redis_connection, return_queue, response, base64_images, server_id)
+            print("Response sent.")
+            print()
             working = False
             if interrupted:
                 print("Interrupted. Exiting.")
