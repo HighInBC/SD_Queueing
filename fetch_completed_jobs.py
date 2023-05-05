@@ -4,17 +4,36 @@ import sys
 import os
 import base64
 import datetime
+import glob
 from sdq.redis_handler import connect_to_redis, read_from_return_queue, InvalidInputException
 from sdq.config_parser import ConfigParser
 
+def get_highest_prefix(path):
+    search_pattern = os.path.join(path, "*.png")
+    files = glob.glob(search_pattern)
+    highest = 0
+    for f in files:
+        try:
+            prefix = int(os.path.basename(f).split('_')[0])
+            highest = max(highest, prefix)
+        except ValueError:
+            pass
+    return highest
+
 def get_image_path(label, seed, index, filename):
+    global highest_prefixes
+
     counter_key = "_".join(label)
-    file_number = counter.get(counter_key, 0)
-    counter[counter_key] = file_number + 1
-    file_number = str(file_number).zfill(4)
     date = datetime.datetime.now().strftime("%Y-%m-%d")
+    if counter_key not in highest_prefixes:
+        path = os.path.join("incoming", date, *label)
+        os.makedirs(path, exist_ok=True)
+        highest_prefixes[counter_key] = get_highest_prefix(path) + 1
+    else:
+        highest_prefixes[counter_key] += 1
+    
+    file_number = str(highest_prefixes[counter_key]).zfill(4)
     path = os.path.join("incoming", date, *label)
-    os.makedirs(path, exist_ok=True)
     path = os.path.join(path, f"{file_number}_{seed}_{filename}_{index}.png")
     return path
 
@@ -38,8 +57,8 @@ def handle_job(job):
 
 def main():
     config = ConfigParser(config_file='config.json')
-    global counter
-    counter = {}
+    global highest_prefixes
+    highest_prefixes = {}
 
     try:
         redis_connection = connect_to_redis(config)
