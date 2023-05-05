@@ -52,14 +52,16 @@ def main(priority, delay, config_file):
         return_queue = response["return_queue"]
         print(json.dumps(response, indent=4))
         if payload is not None:
-            working = True
             print("Processing request...")
-            base64_images = process_stable_diffusion_request(payload)
-            print("Sending response...")
-            send_response_to_return_queue(redis_connection, return_queue, response, base64_images, server_id)
+            working = True
+            try:
+                base64_images = process_stable_diffusion_request(payload)
+                print("Sending response...")
+                send_response_to_return_queue(redis_connection, return_queue, response, base64_images, server_id)
+            finally:
+                working = False
             print("Response sent.")
             print()
-            working = False
             if interrupted:
                 print("Interrupted. Exiting.")
                 exit(0)
