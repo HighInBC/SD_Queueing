@@ -13,13 +13,13 @@ working = False
 def signal_handler(signum, frame):
     global interrupted
     global working
+    print("Working: "+str(working))
     if working == False:
-        print("working: "+str(working))
         print("No job in progress. Exiting.")
         exit(0)
     if interrupted:
         print("Force quit signal received. Exiting.")
-        exit(0)
+        exit(130)
     interrupted = True
     print("Stop signal received. Ending after current job. Press Ctrl+C again to force quit.")
 
