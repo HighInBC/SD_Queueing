@@ -4,6 +4,7 @@ import argparse
 import itertools
 import json
 import os
+import math
 from sdq.redis_handler import connect_to_redis, send_job_to_ingress_queue
 from sdq.sd_handler import get_payload_from_png
 from sdq.config_parser import ConfigParser
@@ -35,7 +36,7 @@ def load_payload(target_file):
     return payload
 
 def combine_arrays(*args):
-    if not args:
+    if not all(args):
         return []
     args = [list(arg) for arg in args if isinstance(arg, (list, tuple)) and arg]
     combinations = list(itertools.product(*args))
@@ -69,7 +70,7 @@ def main():
     changes         = combine_arrays(srx, sry, srz)
     originals       = changes[0]
     original_prompt = payload['prompt']
-    loops_needed = image_count / len(changes) // batch_size
+    loops_needed = math.ceil(image_count / (len(changes) * batch_size))
     print("Loops needed: {}".format(loops_needed))
     for loop_index in range(int(loops_needed)):
         print("Loop: {}".format(loop_index))
@@ -80,7 +81,6 @@ def main():
                     print("Error: Original not found in prompt: "+originals[change_index])
                     exit()
                 prompt = prompt.replace(originals[change_index], change[change_index], 1)
-
             payload['prompt'] = prompt
             payload['batch_size'] = batch_size
             send_job_to_ingress_queue(redis_connection, base_queue_name, payload, return_queue, [root_path,output_label,*change], priority)
