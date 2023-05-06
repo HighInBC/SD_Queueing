@@ -36,7 +36,7 @@ def load_payload(target_file):
     return payload
 
 def combine_arrays(*args):
-    if not all(args):
+    if not any(args):
         return []
     args = [list(arg) for arg in args if isinstance(arg, (list, tuple)) and arg]
     combinations = list(itertools.product(*args))
