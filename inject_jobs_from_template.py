@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import itertools
 import json
@@ -58,8 +57,8 @@ def main():
     srz = args.srz.split(',') if args.srz else None
 
     config = ConfigParser(config_file=config_file)
-    base_queue_name = config.ingress_queue
-    return_queue = config.return_queue
+    base_queue_name  = config.ingress_queue
+    return_queue     = config.return_queue
     redis_connection = connect_to_redis(config)
 
     root_path = 'bulk_images'
@@ -70,7 +69,8 @@ def main():
     changes         = combine_arrays(srx, sry, srz)
     originals       = changes[0]
     original_prompt = payload['prompt']
-    loops_needed = math.ceil(image_count / (len(changes) * batch_size))
+    loops_needed    = math.ceil(image_count / (len(changes) * batch_size))
+    
     print("Loops needed: {}".format(loops_needed))
     for loop_index in range(int(loops_needed)):
         print("Loop: {}".format(loop_index))
