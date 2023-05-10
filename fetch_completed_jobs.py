@@ -25,17 +25,17 @@ def get_image_path(label, seed, index, filename):
 
     counter_key = "_".join([str(l) for l in label])
     date = datetime.datetime.now().strftime("%Y-%m-%d")
+    path = os.path.join("incoming", date, *label)
+    os.makedirs(path, exist_ok=True)
+
     if counter_key not in highest_prefixes:
-        path = os.path.join("incoming", date, *label)
-        os.makedirs(path, exist_ok=True)
         highest_prefixes[counter_key] = get_highest_prefix(path) + 1
     else:
         highest_prefixes[counter_key] += 1
     
     file_number = str(highest_prefixes[counter_key]).zfill(4)
-
-    path = os.path.join("incoming", date, *label)
     path = os.path.join(path, f"{file_number}_{seed}_{filename}_{index}.png")
+    
     return path
 
 
