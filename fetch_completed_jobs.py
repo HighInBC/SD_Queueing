@@ -23,8 +23,8 @@ def get_highest_prefix(path):
 def get_image_path(label, seed, index, filename):
     global highest_prefixes
 
-    counter_key = "_".join([str(l) for l in label])
     date = datetime.datetime.now().strftime("%Y-%m-%d")
+    counter_key = "_".join([str(l) for l in label] + [date])
     path = os.path.join("incoming", date, *label)
     os.makedirs(path, exist_ok=True)
 
@@ -37,7 +37,6 @@ def get_image_path(label, seed, index, filename):
     path = os.path.join(path, f"{file_number}_{seed}_{filename}_{index}.png")
     
     return path
-
 
 def handle_job(job):
     seed = job["request"]["payload"]["seed"]
